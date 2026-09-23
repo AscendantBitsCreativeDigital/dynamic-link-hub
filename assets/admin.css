@@ -1,0 +1,87 @@
+.dlh-wrap .nav-tab-wrapper {
+	margin-bottom: 1.2em;
+}
+
+.dlh-tab-panel {
+	margin-top: 1em;
+}
+
+.dlh-preview {
+	margin-top: 1em;
+	padding: 1em;
+	background: #fff;
+	border: 1px solid #dcdcde;
+	max-width: 320px;
+}
+
+.dlh-preview-label {
+	display: block;
+	margin-bottom: .5em;
+	font-weight: 600;
+}
+
+.dlh-preview-button {
+	display: block;
+	padding: 12px 16px;
+	border-radius: 8px;
+	text-align: center;
+	text-decoration: none;
+	font-weight: 600;
+}
+
+.dlh-links-repeater {
+	max-width: 700px;
+}
+
+.dlh-link-row {
+	display: flex;
+	align-items: flex-start;
+	gap: 10px;
+	background: #fff;
+	border: 1px solid #dcdcde;
+	border-radius: 4px;
+	padding: 12px 14px;
+	margin-bottom: 10px;
+}
+
+.dlh-link-row.dlh-dragging {
+	opacity: .5;
+}
+
+.dlh-drag-handle {
+	cursor: grab;
+	color: #8c8f94;
+	margin-top: 6px;
+}
+
+.dlh-link-row-fields {
+	flex: 1;
+}
+
+.dlh-link-row-fields p {
+	margin: 0 0 8px;
+}
+
+.dlh-link-row-fields label {
+	font-weight: 600;
+	display: inline-block;
+	margin-bottom: 2px;
+}
+
+.dlh-link-type-choice label {
+	font-weight: 400;
+	display: inline;
+}
+
+.dlh-remove-link {
+	color: #b32d2e;
+	margin-top: 6px;
+}
+
+.dlh-remove-link:hover {
+	color: #dc3232;
+}
+
+#dlh-link-row-template {
+	display: none;
+}

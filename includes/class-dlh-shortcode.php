@@ -1,0 +1,213 @@
+<?php
+/**
+ * Shortcode rendering for Dynamic Link Hub.
+ *
+ * @package DynamicLinkHub
+ */
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
+class DLH_Shortcode {
+
+	/** @var bool Whether the footer CSS has already been queued for this request. */
+	private static $styles_queued = false;
+
+	public function __construct() {
+		add_shortcode( 'dynamic_link_hub', array( $this, 'render' ) );
+
+		// Keep the original shortcode tag working too, in case it's already
+		// placed on pages from the old snippet.
+		add_shortcode( 'dynamic_link_hub_final', array( $this, 'render' ) );
+	}
+
+	public function render( $atts ) {
+		$settings = dlh_get_settings();
+
+		$this->maybe_queue_styles( $settings );
+
+		ob_start();
+
+		echo '<div class="dlh-link-hub">';
+
+		// --- Most recent post button ---
+		if ( ! empty( $settings['show_recent_post'] ) ) {
+			$recent = new WP_Query(
+				array(
+					'post_type'           => 'post',
+					'posts_per_page'      => 1,
+					'orderby'             => 'date',
+					'order'               => 'DESC',
+					'ignore_sticky_posts' => true,
+					'no_found_rows'       => true,
+				)
+			);
+
+			if ( $recent->have_posts() ) {
+				echo '<div class="link-hub-section link-hub-posts">';
+				while ( $recent->have_posts() ) {
+					$recent->the_post();
+					printf(
+						'<a href="%1$s" class="link-hub-button">%2$s</a>',
+						esc_url( get_permalink() ),
+						esc_html( $settings['recent_post_label'] )
+					);
+				}
+				echo '</div>';
+				wp_reset_postdata();
+			}
+		}
+
+		// --- Custom link buttons ---
+		if ( ! empty( $settings['links'] ) ) {
+			echo '<div class="link-hub-section link-hub-pages">';
+			foreach ( $settings['links'] as $link ) {
+				$this->render_link_button( $link );
+			}
+			echo '</div>';
+		}
+
+		// --- Social links ---
+		if ( ! empty( $settings['social_links'] ) ) {
+			$this->render_social_links( $settings['social_links'], $settings['button_bg'] );
+		}
+
+		echo '</div>';
+
+		return ob_get_clean();
+	}
+
+	private function render_link_button( $link ) {
+		$url   = '';
+		$label = isset( $link['label'] ) ? $link['label'] : '';
+
+		if ( 'existing' === $link['type'] && ! empty( $link['post_id'] ) ) {
+			$post_id = absint( $link['post_id'] );
+			$url     = get_permalink( $post_id );
+			if ( '' === $label ) {
+				$label = get_the_title( $post_id );
+			}
+			if ( ! $url ) {
+				return; // The page/post may have been deleted since.
+			}
+		} elseif ( 'custom' === $link['type'] && ! empty( $link['url'] ) ) {
+			$url = $link['url'];
+			if ( '' === $label ) {
+				$label = $url;
+			}
+		} else {
+			return;
+		}
+
+		$target_attr = ! empty( $link['new_tab'] ) ? ' target="_blank" rel="noopener noreferrer"' : '';
+
+		printf(
+			'<a href="%1$s" class="link-hub-button"%2$s>%3$s</a>',
+			esc_url( $url ),
+			$target_attr, // phpcs:ignore -- built from static/known-safe strings above.
+			esc_html( $label )
+		);
+	}
+
+	/**
+	 * Renders the horizontally centered row of social icons below the
+	 * button stack, built straight from the saved Social Links repeater
+	 * — no WordPress menu involved. The icon itself (not a circle behind
+	 * it) carries that platform's own official brand color, on a
+	 * transparent background; the color lightens on hover/focus.
+	 *
+	 * @param array $links    Sanitized entries: { platform, url, label }.
+	 * @param string $fallback_hex Button background color, used where a
+	 *                              platform has no official color of its own.
+	 */
+	private function render_social_links( $links, $fallback_hex ) {
+		echo '<ul class="dlh-social-menu dlh-social-menu-icons">';
+		foreach ( $links as $link ) {
+			$platform = isset( $link['platform'] ) ? $link['platform'] : 'custom';
+			$url      = isset( $link['url'] ) ? $link['url'] : '';
+			if ( '' === $url ) {
+				continue;
+			}
+
+			$label  = ! empty( $link['label'] ) ? $link['label'] : DLH_Icons::default_label( $platform );
+			$target = ( 0 === stripos( $url, 'http' ) ) ? ' target="_blank" rel="noopener noreferrer"' : '';
+			$color  = DLH_Icons::color( $platform, $fallback_hex );
+
+			printf(
+				'<li><a href="%1$s" class="dlh-social-icon" style="--dlh-icon-color:%5$s;color:%5$s" aria-label="%2$s" title="%2$s"%3$s>%4$s</a></li>',
+				esc_url( $url ),
+				esc_attr( $label ),
+				$target, // phpcs:ignore -- fixed string, never user input.
+				DLH_Icons::markup( $platform ), // phpcs:ignore -- fixed, known-safe SVG/text from DLH_Icons.
+				esc_attr( $color )
+			);
+		}
+		echo '</ul>';
+	}
+
+	private function maybe_queue_styles( $settings ) {
+		if ( self::$styles_queued ) {
+			return;
+		}
+		self::$styles_queued = true;
+
+		add_action(
+			'wp_footer',
+			function () use ( $settings ) {
+				$css = sprintf(
+					'
+.dlh-link-hub { max-width: 480px; margin: 0 auto; }
+.dlh-link-hub .link-hub-section { display: flex; flex-direction: column; }
+.dlh-link-hub .link-hub-button {
+	display: block;
+	background-color: %1$s;
+	color: %2$s;
+	padding: 15px 20px;
+	margin-bottom: 1rem;
+	border-radius: %5$dpx;
+	text-align: center;
+	text-decoration: none;
+	font-weight: 600;
+	transition: background-color 0.2s ease, color 0.2s ease;
+}
+.dlh-link-hub .link-hub-button:hover,
+.dlh-link-hub .link-hub-button:focus {
+	background-color: %3$s;
+	color: %4$s;
+}
+.dlh-social-menu { list-style: none; display: flex; flex-wrap: wrap; gap: .85rem; justify-content: center; align-items: center; margin: 1.5rem 0 0; padding: 0; }
+.dlh-social-icon {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 60px;
+	height: 60px;
+	border-radius: 50%%;
+	background-color: transparent;
+	text-decoration: none;
+	font-weight: 700;
+	font-size: 20px;
+	line-height: 1;
+	transition: transform 0.15s ease, opacity 0.15s ease, color 0.15s ease;
+}
+.dlh-social-icon:hover, .dlh-social-icon:focus {
+	transform: scale(1.08);
+	opacity: 0.7;
+	color: color-mix(in srgb, var(--dlh-icon-color) 55%%, white);
+}
+.dlh-social-icon svg { width: 30px; height: 30px; fill: currentColor; }
+.dlh-social-glyph { font-size: 22px; }
+',
+					sanitize_hex_color( $settings['button_bg'] ),
+					sanitize_hex_color( $settings['button_text'] ),
+					sanitize_hex_color( $settings['button_bg_hover'] ),
+					sanitize_hex_color( $settings['button_text_hover'] ),
+					absint( $settings['button_radius'] )
+				);
+
+				echo '<style id="dynamic-link-hub-styles">' . $css . '</style>'; // phpcs:ignore -- printf-built CSS, values sanitized above.
+			}
+		);
+	}
+}
