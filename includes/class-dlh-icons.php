@@ -10,7 +10,10 @@
  * and "custom link" aren't brands, so they use simple generic glyphs
  * and pick up whatever button color the hub is themed with.
  *
- * @package DynamicLinkHub
+ * @package   DynamicLinkHub
+ * @author    Ascendant Bits Creative Digital (https://ascendantbits.com/)
+ * @copyright 2026 Ascendant Bits Creative Digital
+ * @license   GPL-2.0-or-later
  */
 
 if ( ! defined( 'ABSPATH' ) ) {

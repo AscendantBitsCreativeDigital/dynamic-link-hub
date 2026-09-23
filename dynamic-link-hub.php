@@ -2,15 +2,30 @@
 /**
  * Plugin Name:       Dynamic Link Hub
  * Plugin URI:        https://ascendantbits.com/
- * Description:       A configurable Linktree-style button hub shortcode, rendered in its own width-configurable container with an optional round avatar image. Always links your most recent post, plus editable custom link buttons and an optional social menu. Use the [dynamic_link_hub] shortcode anywhere.
- * Version:           1.3.0
+ * Description:       A configurable link-in-bio hub shortcode, rendered in its own width-configurable container with an optional round avatar image. Always links your most recent post, plus editable custom link buttons and an optional social menu. Use the [dynamic_link_hub] shortcode anywhere.
+ * Version:           1.3.1
  * Requires at least: 5.8
  * Requires PHP:      7.4
- * Author:            Ascendant Bits
+ * Author:            Ascendant Bits Creative Digital
  * Author URI:        https://ascendantbits.com/
  * License:           GPL v2 or later
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain:       dynamic-link-hub
+ *
+ * Dynamic Link Hub is free software: you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as
+ * published by the Free Software Foundation, either version 2 of the
+ * License, or (at your option) any later version.
+ *
+ * Dynamic Link Hub is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * General Public License for more details.
+ *
+ * @package   DynamicLinkHub
+ * @author    Ascendant Bits Creative Digital (https://ascendantbits.com/)
+ * @copyright 2026 Ascendant Bits Creative Digital
+ * @license   GPL-2.0-or-later
  */
 
 // Exit if accessed directly.
@@ -19,7 +34,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // --- Constants ---
-define( 'DLH_VERSION', '1.3.0' );
+define( 'DLH_VERSION', '1.3.1' );
 define( 'DLH_PLUGIN_FILE', __FILE__ );
 define( 'DLH_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'DLH_PLUGIN_URL', plugin_dir_url( __FILE__ ) );

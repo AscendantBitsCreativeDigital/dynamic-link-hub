@@ -9,7 +9,10 @@
  * "which tab was this partial submission for" logic that could silently
  * drop a save.
  *
- * @package DynamicLinkHub
+ * @package   DynamicLinkHub
+ * @author    Ascendant Bits Creative Digital (https://ascendantbits.com/)
+ * @copyright 2026 Ascendant Bits Creative Digital
+ * @license   GPL-2.0-or-later
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -256,6 +259,7 @@ class DLH_Admin {
 			<h1><?php esc_html_e( 'Dynamic Link Hub', 'dynamic-link-hub' ); ?></h1>
 			<p><?php esc_html_e( 'Configure the button hub shown by the [dynamic_link_hub] shortcode.', 'dynamic-link-hub' ); ?></p>
 
+			<?php // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only display flag set by WP core's own options.php redirect; nothing is written based on it. ?>
 			<?php if ( isset( $_GET['settings-updated'] ) && $_GET['settings-updated'] ) : ?>
 				<div class="notice notice-success is-dismissible">
 					<p><?php esc_html_e( 'Link Hub settings saved.', 'dynamic-link-hub' ); ?></p>

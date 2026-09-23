@@ -1,3 +1,12 @@
+/**
+ * Admin screen styles for Dynamic Link Hub.
+ *
+ * @package   DynamicLinkHub
+ * @author    Ascendant Bits Creative Digital (https://ascendantbits.com/)
+ * @copyright 2026 Ascendant Bits Creative Digital
+ * @license   GPL-2.0-or-later
+ */
+
 .dlh-wrap .nav-tab-wrapper {
 	margin-bottom: 1.2em;
 }

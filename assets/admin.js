@@ -1,3 +1,11 @@
+/**
+ * Admin screen behavior for Dynamic Link Hub.
+ *
+ * @package   DynamicLinkHub
+ * @author    Ascendant Bits Creative Digital (https://ascendantbits.com/)
+ * @copyright 2026 Ascendant Bits Creative Digital
+ * @license   GPL-2.0-or-later
+ */
 ( function ( $ ) {
 	'use strict';
 
