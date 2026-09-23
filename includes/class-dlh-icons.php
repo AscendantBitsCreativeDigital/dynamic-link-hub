@@ -178,7 +178,9 @@ class DLH_Icons {
 	/**
 	 * The icon itself: the real brand mark when we have one, a plain
 	 * text wordmark for LinkedIn, or a simple generic SVG otherwise.
-	 * Always rendered in white so it reads clearly on the colored circle.
+	 * Every icon — including the LinkedIn wordmark — renders in the
+	 * platform's own color on a transparent background; see the CSS in
+	 * DLH_Shortcode::maybe_queue_styles().
 	 */
 	public static function markup( $platform ) {
 		$data = self::get( $platform );
