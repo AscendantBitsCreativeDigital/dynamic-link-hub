@@ -67,6 +67,7 @@ class DLH_Admin {
 		wp_enqueue_style( 'wp-color-picker' );
 		wp_enqueue_script( 'wp-color-picker' );
 		wp_enqueue_script( 'jquery-ui-sortable' );
+		wp_enqueue_media();
 
 		wp_enqueue_style( 'dlh-admin', DLH_PLUGIN_URL . 'assets/admin.css', array(), DLH_VERSION );
 		wp_enqueue_script(
@@ -102,6 +103,22 @@ class DLH_Admin {
 
 		$radius                  = isset( $input['button_radius'] ) ? absint( $input['button_radius'] ) : $defaults['button_radius'];
 		$output['button_radius'] = min( 50, max( 0, $radius ) );
+
+		$width                      = isset( $input['container_width'] ) ? absint( $input['container_width'] ) : $defaults['container_width'];
+		$output['container_width'] = min( 800, max( 280, $width ) );
+
+		// Avatar image.
+		$avatar_id            = isset( $input['avatar_id'] ) ? absint( $input['avatar_id'] ) : 0;
+		$output['avatar_id']  = $avatar_id;
+		$output['avatar_url'] = $avatar_id ? esc_url_raw( (string) wp_get_attachment_url( $avatar_id ) ) : '';
+
+		$avatar_size            = isset( $input['avatar_size'] ) ? absint( $input['avatar_size'] ) : $defaults['avatar_size'];
+		$output['avatar_size']  = min( 300, max( 60, $avatar_size ) );
+
+		$avatar_border_width           = isset( $input['avatar_border_width'] ) ? absint( $input['avatar_border_width'] ) : $defaults['avatar_border_width'];
+		$output['avatar_border_width'] = min( 20, max( 0, $avatar_border_width ) );
+
+		$output['avatar_border_color'] = $this->sanitize_color( $input, 'avatar_border_color', $defaults['avatar_border_color'] );
 
 		// Links.
 		$output['show_recent_post']  = ! empty( $input['show_recent_post'] ) ? 1 : 0;
@@ -322,11 +339,94 @@ class DLH_Admin {
 					<input type="number" id="dlh_button_radius" min="0" max="50" name="<?php echo esc_attr( DLH_OPTION_KEY ); ?>[button_radius]" value="<?php echo esc_attr( $settings['button_radius'] ); ?>" class="small-text" />
 				</td>
 			</tr>
+			<tr>
+				<th scope="row"><label for="dlh_container_width"><?php esc_html_e( 'Container width', 'dynamic-link-hub' ); ?></label></th>
+				<td>
+					<?php $this->render_range_control( 'container_width', $settings['container_width'], 280, 800, 10, 'px' ); ?>
+					<p class="description"><?php esc_html_e( 'How wide the whole link hub (avatar, buttons, and social icons) is allowed to grow before it centers itself.', 'dynamic-link-hub' ); ?></p>
+				</td>
+			</tr>
 		</table>
 		<div class="dlh-preview">
 			<span class="dlh-preview-label"><?php esc_html_e( 'Live preview:', 'dynamic-link-hub' ); ?></span>
 			<a href="#" class="dlh-preview-button link-hub-button" onclick="return false;"><?php esc_html_e( 'Example Button', 'dynamic-link-hub' ); ?></a>
 		</div>
+
+		<?php $this->render_avatar_fields( $settings ); ?>
+		<?php
+	}
+
+	/**
+	 * A Gutenberg-style range slider paired with a live number readout,
+	 * used anywhere we ask for a pixel value with a sane min/max instead
+	 * of a free-typed number field.
+	 */
+	private function render_range_control( $key, $value, $min, $max, $step, $unit ) {
+		$id   = 'dlh_' . $key;
+		$name = esc_attr( DLH_OPTION_KEY ) . '[' . $key . ']';
+		?>
+		<span class="dlh-range-control">
+			<input
+				type="range"
+				id="<?php echo esc_attr( $id ); ?>"
+				class="dlh-range-input"
+				min="<?php echo esc_attr( $min ); ?>"
+				max="<?php echo esc_attr( $max ); ?>"
+				step="<?php echo esc_attr( $step ); ?>"
+				value="<?php echo esc_attr( $value ); ?>"
+				data-paired-number="<?php echo esc_attr( $id ); ?>_number" />
+			<input
+				type="number"
+				id="<?php echo esc_attr( $id ); ?>_number"
+				class="dlh-range-number"
+				name="<?php echo $name; // phpcs:ignore -- already escaped above. ?>"
+				min="<?php echo esc_attr( $min ); ?>"
+				max="<?php echo esc_attr( $max ); ?>"
+				step="<?php echo esc_attr( $step ); ?>"
+				value="<?php echo esc_attr( $value ); ?>"
+				data-paired-range="<?php echo esc_attr( $id ); ?>" /><span class="dlh-range-unit"><?php echo esc_html( $unit ); ?></span>
+		</span>
+		<?php
+	}
+
+	private function render_avatar_fields( $settings ) {
+		$has_avatar = ! empty( $settings['avatar_url'] );
+		?>
+		<h2><?php esc_html_e( 'Avatar Image', 'dynamic-link-hub' ); ?></h2>
+		<p class="description"><?php esc_html_e( 'An optional round image shown above the buttons.', 'dynamic-link-hub' ); ?></p>
+		<table class="form-table" role="presentation">
+			<tr>
+				<th scope="row"><?php esc_html_e( 'Image', 'dynamic-link-hub' ); ?></th>
+				<td>
+					<div class="dlh-avatar-picker">
+						<img
+							id="dlh-avatar-preview-img"
+							class="dlh-avatar-preview-img"
+							src="<?php echo $has_avatar ? esc_url( $settings['avatar_url'] ) : ''; ?>"
+							style="<?php echo $has_avatar ? '' : 'display:none;'; ?>border-width:<?php echo esc_attr( $settings['avatar_border_width'] ); ?>px;border-color:<?php echo esc_attr( $settings['avatar_border_color'] ); ?>;" />
+						<input type="hidden" id="dlh_avatar_id" name="<?php echo esc_attr( DLH_OPTION_KEY ); ?>[avatar_id]" value="<?php echo esc_attr( $settings['avatar_id'] ); ?>" />
+						<p>
+							<button type="button" class="button" id="dlh-avatar-choose"><?php esc_html_e( 'Choose Image', 'dynamic-link-hub' ); ?></button>
+							<button type="button" class="button-link" id="dlh-avatar-remove" style="<?php echo $has_avatar ? '' : 'display:none;'; ?>margin-left:8px;color:#b32d2e;"><?php esc_html_e( 'Remove', 'dynamic-link-hub' ); ?></button>
+						</p>
+					</div>
+				</td>
+			</tr>
+			<tr>
+				<th scope="row"><label for="dlh_avatar_size"><?php esc_html_e( 'Image size', 'dynamic-link-hub' ); ?></label></th>
+				<td><?php $this->render_range_control( 'avatar_size', $settings['avatar_size'], 60, 300, 5, 'px' ); ?></td>
+			</tr>
+			<tr>
+				<th scope="row"><label for="dlh_avatar_border_width"><?php esc_html_e( 'Border thickness', 'dynamic-link-hub' ); ?></label></th>
+				<td><?php $this->render_range_control( 'avatar_border_width', $settings['avatar_border_width'], 0, 20, 1, 'px' ); ?></td>
+			</tr>
+			<tr>
+				<th scope="row"><?php esc_html_e( 'Border color', 'dynamic-link-hub' ); ?></th>
+				<td>
+					<input type="text" id="dlh_avatar_border_color" class="dlh-color-field" name="<?php echo esc_attr( DLH_OPTION_KEY ); ?>[avatar_border_color]" value="<?php echo esc_attr( $settings['avatar_border_color'] ); ?>" data-default-color="#7E00B8" />
+				</td>
+			</tr>
+		</table>
 		<?php
 	}
 

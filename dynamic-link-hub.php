@@ -2,8 +2,8 @@
 /**
  * Plugin Name:       Dynamic Link Hub
  * Plugin URI:        https://ascendantbits.com/
- * Description:       A configurable Linktree-style button hub shortcode. Always links your most recent post, plus editable custom link buttons and an optional social menu. Use the [dynamic_link_hub] shortcode anywhere.
- * Version:           1.2.1
+ * Description:       A configurable Linktree-style button hub shortcode, rendered in its own width-configurable container with an optional round avatar image. Always links your most recent post, plus editable custom link buttons and an optional social menu. Use the [dynamic_link_hub] shortcode anywhere.
+ * Version:           1.3.0
  * Requires at least: 5.8
  * Requires PHP:      7.4
  * Author:            Ascendant Bits
@@ -19,7 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // --- Constants ---
-define( 'DLH_VERSION', '1.2.1' );
+define( 'DLH_VERSION', '1.3.0' );
 define( 'DLH_PLUGIN_FILE', __FILE__ );
 define( 'DLH_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'DLH_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
@@ -33,15 +33,21 @@ define( 'DLH_OPTION_KEY', 'dlh_settings' );
  */
 function dlh_get_default_settings() {
 	return array(
-		'button_bg'          => '#7E00B8',
-		'button_text'        => '#ffffff',
-		'button_bg_hover'    => '#FEB400',
-		'button_text_hover'  => '#000000',
-		'button_radius'      => 8,
-		'show_recent_post'   => 1,
-		'recent_post_label'  => 'My Latest Post',
-		'links'              => array(),
-		'social_links'       => array(),
+		'button_bg'           => '#7E00B8',
+		'button_text'         => '#ffffff',
+		'button_bg_hover'     => '#FEB400',
+		'button_text_hover'   => '#000000',
+		'button_radius'       => 8,
+		'container_width'     => 480,
+		'avatar_id'           => 0,
+		'avatar_url'          => '',
+		'avatar_size'         => 140,
+		'avatar_border_width' => 4,
+		'avatar_border_color' => '#7E00B8',
+		'show_recent_post'    => 1,
+		'recent_post_label'   => 'My Latest Post',
+		'links'               => array(),
+		'social_links'        => array(),
 	);
 }
 

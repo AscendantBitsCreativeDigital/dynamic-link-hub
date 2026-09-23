@@ -85,3 +85,40 @@
 #dlh-link-row-template {
 	display: none;
 }
+
+.dlh-range-control {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.dlh-range-input {
+	width: 220px;
+	vertical-align: middle;
+}
+
+.dlh-range-number {
+	width: 70px;
+}
+
+.dlh-range-unit {
+	color: #646970;
+}
+
+.dlh-avatar-picker {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 8px;
+}
+
+.dlh-avatar-preview-img {
+	display: block;
+	width: 140px;
+	height: 140px;
+	border-radius: 50%;
+	border-style: solid;
+	border-color: #7E00B8;
+	object-fit: cover;
+	background: #f0f0f1;
+}

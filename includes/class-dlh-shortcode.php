@@ -29,7 +29,13 @@ class DLH_Shortcode {
 
 		ob_start();
 
-		echo '<div class="dlh-link-hub">';
+		printf(
+			'<div class="dlh-link-hub" style="max-width:%dpx;">',
+			absint( $settings['container_width'] )
+		);
+
+		// --- Avatar image ---
+		$this->render_avatar( $settings );
 
 		// --- Most recent post button ---
 		if ( ! empty( $settings['show_recent_post'] ) ) {
@@ -76,6 +82,28 @@ class DLH_Shortcode {
 		echo '</div>';
 
 		return ob_get_clean();
+	}
+
+	/**
+	 * The round profile image shown above the button stack, when one has
+	 * been chosen in Appearance. Size and border are inline styles
+	 * (per-install values from settings); the circular shape itself
+	 * lives in the shared footer CSS.
+	 *
+	 * @param array $settings Full plugin settings.
+	 */
+	private function render_avatar( $settings ) {
+		if ( empty( $settings['avatar_url'] ) ) {
+			return;
+		}
+
+		printf(
+			'<div class="dlh-avatar-wrap"><img src="%1$s" alt="" class="dlh-avatar" style="width:%2$dpx;height:%2$dpx;border-width:%3$dpx;border-color:%4$s;" /></div>',
+			esc_url( $settings['avatar_url'] ),
+			absint( $settings['avatar_size'] ),
+			absint( $settings['avatar_border_width'] ),
+			esc_attr( sanitize_hex_color( $settings['avatar_border_color'] ) ? $settings['avatar_border_color'] : '#7E00B8' )
+		);
 	}
 
 	private function render_link_button( $link ) {
@@ -157,7 +185,9 @@ class DLH_Shortcode {
 			function () use ( $settings ) {
 				$css = sprintf(
 					'
-.dlh-link-hub { max-width: 480px; margin: 0 auto; }
+.dlh-link-hub { margin: 0 auto; }
+.dlh-avatar-wrap { display: flex; justify-content: center; margin-bottom: 1.25rem; }
+.dlh-avatar { display: block; border-radius: 50%%; border-style: solid; object-fit: cover; }
 .dlh-link-hub .link-hub-section { display: flex; flex-direction: column; }
 .dlh-link-hub .link-hub-button {
 	display: block;

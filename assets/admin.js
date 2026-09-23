@@ -6,9 +6,11 @@
 			change: function () {
 				// Give the live preview a moment to pick up the new value.
 				setTimeout( updatePreview, 50 );
+				setTimeout( updateAvatarPreviewBorder, 50 );
 			},
 			clear: function () {
 				setTimeout( updatePreview, 50 );
+				setTimeout( updateAvatarPreviewBorder, 50 );
 			},
 		} );
 	}
@@ -43,6 +45,95 @@
 				backgroundColor: bg || '#7E00B8',
 				color: text || '#ffffff',
 			} );
+		} );
+	}
+
+	/**
+	 * Keeps each range slider and its paired number field in sync in both
+	 * directions, so admins can drag or type either one.
+	 */
+	function initRangeControls() {
+		$( '.dlh-range-input' ).on( 'input change', function () {
+			$( '#' + $( this ).data( 'paired-number' ) ).val( $( this ).val() );
+		} );
+		$( '.dlh-range-number' ).on( 'input change', function () {
+			$( '#' + $( this ).data( 'paired-range' ) ).val( $( this ).val() );
+		} );
+	}
+
+	/**
+	 * The avatar image "Choose Image" / "Remove" buttons, backed by the
+	 * standard WordPress media library modal, plus a live border preview
+	 * that responds to the size/thickness/color fields next to it.
+	 */
+	function initAvatarPicker() {
+		var $chooseBtn = $( '#dlh-avatar-choose' ),
+			$removeBtn = $( '#dlh-avatar-remove' ),
+			$idField   = $( '#dlh_avatar_id' ),
+			$img       = $( '#dlh-avatar-preview-img' ),
+			frame;
+
+		if ( ! $chooseBtn.length || 'undefined' === typeof wp || ! wp.media ) {
+			return;
+		}
+
+		$chooseBtn.on( 'click', function ( e ) {
+			e.preventDefault();
+
+			if ( frame ) {
+				frame.open();
+				return;
+			}
+
+			frame = wp.media( {
+				title: 'Select avatar image',
+				library: { type: 'image' },
+				multiple: false,
+			} );
+
+			frame.on( 'select', function () {
+				var attachment = frame.state().get( 'selection' ).first().toJSON(),
+					url        = attachment.url;
+
+				if ( attachment.sizes && attachment.sizes.medium ) {
+					url = attachment.sizes.medium.url;
+				}
+
+				$idField.val( attachment.id );
+				$img.attr( 'src', url ).show();
+				$removeBtn.show();
+			} );
+
+			frame.open();
+		} );
+
+		$removeBtn.on( 'click', function ( e ) {
+			e.preventDefault();
+			$idField.val( 0 );
+			$img.attr( 'src', '' ).hide();
+			$removeBtn.hide();
+		} );
+
+		updateAvatarPreviewBorder();
+		$( '#dlh_avatar_border_width, #dlh_avatar_border_width_number, #dlh_avatar_border_color, #dlh_avatar_size, #dlh_avatar_size_number' )
+			.on( 'input change', updateAvatarPreviewBorder );
+	}
+
+	function updateAvatarPreviewBorder() {
+		var $img    = $( '#dlh-avatar-preview-img' ),
+			width   = $( '#dlh_avatar_border_width_number' ).val(),
+			color   = $( '#dlh_avatar_border_color' ).val(),
+			size    = $( '#dlh_avatar_size_number' ).val();
+
+		if ( ! $img.length ) {
+			return;
+		}
+
+		$img.css( {
+			borderWidth: ( width || 0 ) + 'px',
+			borderColor: color || '#7E00B8',
+			width: ( size || 140 ) + 'px',
+			height: ( size || 140 ) + 'px',
 		} );
 	}
 
@@ -177,5 +268,7 @@
 		updatePreview();
 		initLinksRepeater();
 		initSocialRepeater();
+		initRangeControls();
+		initAvatarPicker();
 	} );
 } )( jQuery );
