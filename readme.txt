@@ -4,7 +4,7 @@ Tags: link in bio, link hub, shortcode, social icons, buttons
 Requires at least: 5.8
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.3.1
+Stable tag: 1.4.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -40,6 +40,11 @@ container width are all configurable under the **Appearance** tab.
 The original shortcode tag (`[dynamic_link_hub_final]`) still works, so
 this is a drop-in replacement if you were using the earlier hand-rolled
 snippet this plugin was built from.
+
+This plugin is distributed from its own [GitHub repository](https://github.com/AscendantBitsCreativeDigital/dynamic-link-hub)
+rather than WordPress.org. It checks that repository for new releases and
+shows the normal "Update available" / "Update Now" prompt in wp-admin,
+the same as any other plugin — no separate download-and-reinstall needed.
 
 Developed and maintained by [Ascendant Bits Creative Digital](https://ascendantbits.com/).
 
@@ -89,6 +94,12 @@ Yes, the icons wrap onto additional rows on narrow screens automatically.
 
 == Changelog ==
 
+= 1.4.0 =
+* Added self-hosted update checking against this plugin's GitHub
+  repository (via the bundled, MIT-licensed Plugin Update Checker
+  library), so wp-admin shows "Update available" the normal way. This
+  plugin is distributed from GitHub, not WordPress.org.
+
 = 1.3.1 =
 * Standards/compliance pass ahead of WordPress.org submission: updated
   "Tested up to", replaced a competitor product name with a generic
@@ -119,6 +130,10 @@ Yes, the icons wrap onto additional rows on narrow screens automatically.
 * Initial release.
 
 == Upgrade Notice ==
+
+= 1.4.0 =
+Adds automatic update checking via GitHub. After this version, updates
+show up in wp-admin normally instead of needing a manual re-download.
 
 = 1.3.1 =
 Compliance/housekeeping release ahead of WordPress.org submission; no

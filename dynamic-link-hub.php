@@ -3,7 +3,7 @@
  * Plugin Name:       Dynamic Link Hub
  * Plugin URI:        https://ascendantbits.com/
  * Description:       A configurable link-in-bio hub shortcode, rendered in its own width-configurable container with an optional round avatar image. Always links your most recent post, plus editable custom link buttons and an optional social menu. Use the [dynamic_link_hub] shortcode anywhere.
- * Version:           1.3.1
+ * Version:           1.4.0
  * Requires at least: 5.8
  * Requires PHP:      7.4
  * Author:            Ascendant Bits Creative Digital
@@ -34,7 +34,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // --- Constants ---
-define( 'DLH_VERSION', '1.3.1' );
+define( 'DLH_VERSION', '1.4.0' );
 define( 'DLH_PLUGIN_FILE', __FILE__ );
 define( 'DLH_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'DLH_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
@@ -84,6 +84,36 @@ function dlh_get_settings() {
 require_once DLH_PLUGIN_DIR . 'includes/class-dlh-admin.php';
 require_once DLH_PLUGIN_DIR . 'includes/class-dlh-icons.php';
 require_once DLH_PLUGIN_DIR . 'includes/class-dlh-shortcode.php';
+
+/**
+ * This plugin isn't distributed through WordPress.org, so WordPress has no
+ * built-in way to know a newer version exists. This wires up update checks
+ * against the plugin's own public GitHub repository instead, using the
+ * third-party Plugin Update Checker library (MIT licensed; bundled at
+ * includes/plugin-update-checker/, not loaded from anywhere external).
+ * Once wired up, "Update available" / "Update Now" behave exactly like an
+ * ordinary WordPress.org plugin.
+ *
+ * @see https://github.com/YahnisElsts/plugin-update-checker
+ */
+function dlh_init_update_checker() {
+	require_once DLH_PLUGIN_DIR . 'includes/plugin-update-checker/plugin-update-checker.php';
+
+	$update_checker = \YahnisElsts\PluginUpdateChecker\v5\PucFactory::buildUpdateChecker(
+		'https://github.com/AscendantBitsCreativeDigital/dynamic-link-hub/',
+		DLH_PLUGIN_FILE,
+		'dynamic-link-hub'
+	);
+
+	$update_checker->setBranch( 'main' );
+
+	// Pull the update zip from a GitHub Release's attached asset (the same
+	// build we hand out everywhere else) instead of GitHub's auto-generated
+	// "source code" archive, which names its top-level folder
+	// "dynamic-link-hub-<tag>" instead of "dynamic-link-hub".
+	$update_checker->getVcsApi()->enableReleaseAssets();
+}
+add_action( 'plugins_loaded', 'dlh_init_update_checker' );
 
 /**
  * Boot the plugin.
