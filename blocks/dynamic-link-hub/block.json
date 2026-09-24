@@ -1,0 +1,16 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "dynamic-link-hub/hub",
+	"title": "Link Hub",
+	"category": "widgets",
+	"icon": "admin-links",
+	"description": "Your configured link-in-bio hub: avatar, latest-post button, custom link buttons, and social icons.",
+	"keywords": [ "link in bio", "linktree", "social", "buttons" ],
+	"textdomain": "dynamic-link-hub",
+	"supports": {
+		"html": false,
+		"align": [ "wide", "full" ]
+	},
+	"editorScript": "dlh-block-editor"
+}

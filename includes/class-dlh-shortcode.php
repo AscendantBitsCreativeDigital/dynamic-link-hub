@@ -14,8 +14,21 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 class DLH_Shortcode {
 
-	/** @var bool Whether the footer CSS has already been queued for this request. */
-	private static $styles_queued = false;
+	/** @var DLH_Shortcode|null Shared instance, so other components (e.g. the block's render_callback) can reuse the one created at boot instead of re-registering shortcodes. */
+	private static $instance = null;
+
+	/** @var bool Whether the shared CSS has already been printed for this request. */
+	private static $styles_printed = false;
+
+	/**
+	 * @return DLH_Shortcode
+	 */
+	public static function instance() {
+		if ( null === self::$instance ) {
+			self::$instance = new self();
+		}
+		return self::$instance;
+	}
 
 	public function __construct() {
 		add_shortcode( 'dynamic_link_hub', array( $this, 'render' ) );
@@ -28,9 +41,15 @@ class DLH_Shortcode {
 	public function render( $atts ) {
 		$settings = dlh_get_settings();
 
-		$this->maybe_queue_styles( $settings );
-
 		ob_start();
+
+		// Printed inline (once per request) rather than queued to wp_footer:
+		// the block editor's live preview renders this markup through a
+		// single REST call (ServerSideRender) where wp_footer never fires,
+		// so footer-queued CSS would leave the preview unstyled. Printing it
+		// here works identically on the front end, since the shortcode's
+		// own output already appears well before </body>.
+		$this->maybe_print_styles( $settings );
 
 		printf(
 			'<div class="dlh-link-hub" style="max-width:%dpx;">',
@@ -91,7 +110,7 @@ class DLH_Shortcode {
 	 * The round profile image shown above the button stack, when one has
 	 * been chosen in Appearance. Size and border are inline styles
 	 * (per-install values from settings); the circular shape itself
-	 * lives in the shared footer CSS.
+	 * lives in the shared inline CSS block.
 	 *
 	 * @param array $settings Full plugin settings.
 	 */
@@ -177,17 +196,14 @@ class DLH_Shortcode {
 		echo '</ul>';
 	}
 
-	private function maybe_queue_styles( $settings ) {
-		if ( self::$styles_queued ) {
+	private function maybe_print_styles( $settings ) {
+		if ( self::$styles_printed ) {
 			return;
 		}
-		self::$styles_queued = true;
+		self::$styles_printed = true;
 
-		add_action(
-			'wp_footer',
-			function () use ( $settings ) {
-				$css = sprintf(
-					'
+		$css = sprintf(
+			'
 .dlh-link-hub { margin: 0 auto; }
 .dlh-avatar-wrap { display: flex; justify-content: center; margin-bottom: 1.25rem; }
 .dlh-avatar { display: block; border-radius: 50%%; border-style: solid; object-fit: cover; }
@@ -232,15 +248,13 @@ class DLH_Shortcode {
 .dlh-social-icon svg { width: 30px; height: 30px; fill: currentColor; }
 .dlh-social-glyph { font-size: 22px; }
 ',
-					sanitize_hex_color( $settings['button_bg'] ),
-					sanitize_hex_color( $settings['button_text'] ),
-					sanitize_hex_color( $settings['button_bg_hover'] ),
-					sanitize_hex_color( $settings['button_text_hover'] ),
-					absint( $settings['button_radius'] )
-				);
-
-				echo '<style id="dynamic-link-hub-styles">' . $css . '</style>'; // phpcs:ignore -- printf-built CSS, values sanitized above.
-			}
+			sanitize_hex_color( $settings['button_bg'] ),
+			sanitize_hex_color( $settings['button_text'] ),
+			sanitize_hex_color( $settings['button_bg_hover'] ),
+			sanitize_hex_color( $settings['button_text_hover'] ),
+			absint( $settings['button_radius'] )
 		);
+
+		echo '<style id="dynamic-link-hub-styles">' . $css . '</style>'; // phpcs:ignore -- printf-built CSS, values sanitized above.
 	}
 }

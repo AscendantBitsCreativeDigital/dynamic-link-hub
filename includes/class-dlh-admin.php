@@ -29,6 +29,8 @@ class DLH_Admin {
 		add_action( 'admin_init', array( $this, 'register_settings' ) );
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_assets' ) );
 		add_filter( 'plugin_action_links_' . plugin_basename( DLH_PLUGIN_FILE ), array( $this, 'add_settings_link' ) );
+		add_action( 'admin_post_dlh_export_settings', array( $this, 'handle_export' ) );
+		add_action( 'admin_post_dlh_import_settings', array( $this, 'handle_import' ) );
 	}
 
 	public function add_menu() {
@@ -250,9 +252,10 @@ class DLH_Admin {
 
 		$settings = dlh_get_settings();
 		$tabs     = array(
-			'appearance' => __( 'Appearance', 'dynamic-link-hub' ),
-			'links'      => __( 'Links', 'dynamic-link-hub' ),
-			'social'     => __( 'Social Links', 'dynamic-link-hub' ),
+			'appearance'    => __( 'Appearance', 'dynamic-link-hub' ),
+			'links'         => __( 'Links', 'dynamic-link-hub' ),
+			'social'        => __( 'Social Links', 'dynamic-link-hub' ),
+			'import-export' => __( 'Import / Export', 'dynamic-link-hub' ),
 		);
 		?>
 		<div class="wrap dlh-wrap">
@@ -295,6 +298,11 @@ class DLH_Admin {
 
 				<?php submit_button( __( 'Save Changes', 'dynamic-link-hub' ) ); ?>
 			</form>
+
+			<?php // Its own tab, but deliberately its own <form>s (not nested inside the settings form above) since it needs file upload + a different submit target (admin-post.php). ?>
+			<div class="dlh-tab-panel" id="dlh-panel-import-export" style="display:none;">
+				<?php $this->render_import_export_tab(); ?>
+			</div>
 
 			<hr />
 			<p>
@@ -672,5 +680,125 @@ class DLH_Admin {
 			</button>
 		</div>
 		<?php
+	}
+
+	private function render_import_export_tab() {
+		?>
+		<h2><?php esc_html_e( 'Export Settings', 'dynamic-link-hub' ); ?></h2>
+		<p class="description"><?php esc_html_e( 'Download every Link Hub setting on this site — appearance, avatar, links, and social links — as a single JSON file, so you can back it up or copy it to another site.', 'dynamic-link-hub' ); ?></p>
+		<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+			<input type="hidden" name="action" value="dlh_export_settings" />
+			<?php wp_nonce_field( 'dlh_export_settings', 'dlh_export_nonce' ); ?>
+			<?php submit_button( __( 'Download Settings (JSON)', 'dynamic-link-hub' ), 'secondary' ); ?>
+		</form>
+
+		<hr />
+
+		<h2><?php esc_html_e( 'Import Settings', 'dynamic-link-hub' ); ?></h2>
+		<p class="description"><?php esc_html_e( 'Upload a settings file exported from this plugin. This immediately replaces ALL current Link Hub settings on this site — export your current settings first if you want to keep a copy.', 'dynamic-link-hub' ); ?></p>
+		<p class="description">
+			<?php esc_html_e( 'Note: the avatar image and any buttons linking to an existing page or post are specific to the site they were exported from. Importing into a different site will drop the avatar and those buttons (everything else, including custom-URL buttons and social links, carries over normally) — just re-add them afterward.', 'dynamic-link-hub' ); ?>
+		</p>
+		<?php $this->render_import_notice(); ?>
+		<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" enctype="multipart/form-data">
+			<input type="hidden" name="action" value="dlh_import_settings" />
+			<?php wp_nonce_field( 'dlh_import_settings', 'dlh_import_nonce' ); ?>
+			<p><input type="file" name="dlh_import_file" accept="application/json,.json" required="required" /></p>
+			<?php submit_button( __( 'Import Settings', 'dynamic-link-hub' ), 'primary' ); ?>
+		</form>
+		<?php
+	}
+
+	/**
+	 * Success/error notice for the import form, driven by the ?dlh_import=
+	 * query arg our own admin-post.php redirect adds — never anything an
+	 * attacker could use to write data, only to select which message shows.
+	 */
+	private function render_import_notice() {
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only display flag from our own redirect (handle_import()); nothing is written based on it.
+		if ( ! isset( $_GET['dlh_import'] ) ) {
+			return;
+		}
+
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- see above.
+		$status = sanitize_key( wp_unslash( $_GET['dlh_import'] ) );
+
+		if ( 'success' === $status ) {
+			echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__( 'Settings imported successfully.', 'dynamic-link-hub' ) . '</p></div>';
+			return;
+		}
+
+		$messages = array(
+			'upload_error' => __( 'That file could not be uploaded. Please try again.', 'dynamic-link-hub' ),
+			'invalid_file' => __( 'That does not look like a Dynamic Link Hub settings file (or it is corrupted). Please choose a JSON file exported from this plugin.', 'dynamic-link-hub' ),
+		);
+		$message = isset( $messages[ $status ] ) ? $messages[ $status ] : __( 'Something went wrong importing that file.', 'dynamic-link-hub' );
+
+		echo '<div class="notice notice-error is-dismissible"><p>' . esc_html( $message ) . '</p></div>';
+	}
+
+	/**
+	 * Streams the current settings as a downloadable JSON file. Wrapped in
+	 * a small versioned envelope (rather than the raw settings array) so a
+	 * future format change has somewhere to add a migration, and so
+	 * handle_import() can reject unrelated JSON files instead of silently
+	 * misinterpreting them.
+	 */
+	public function handle_export() {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die( esc_html__( 'You do not have permission to do this.', 'dynamic-link-hub' ) );
+		}
+		check_admin_referer( 'dlh_export_settings', 'dlh_export_nonce' );
+
+		$envelope = array(
+			'plugin'      => 'dynamic-link-hub',
+			'version'     => DLH_VERSION,
+			'exported_at' => gmdate( 'c' ),
+			'settings'    => dlh_get_settings(),
+		);
+
+		nocache_headers();
+		header( 'Content-Type: application/json; charset=utf-8' );
+		header( 'Content-Disposition: attachment; filename="dynamic-link-hub-settings-' . gmdate( 'Y-m-d' ) . '.json"' );
+		echo wp_json_encode( $envelope, JSON_PRETTY_PRINT );
+		exit;
+	}
+
+	/**
+	 * Reads an uploaded settings JSON file and, if it's valid, saves it as
+	 * the site's Link Hub settings. Deliberately reuses sanitize() — the
+	 * exact same clamping/validation a normal form save goes through — so
+	 * an imported file can never end up less validated than a manual save.
+	 */
+	public function handle_import() {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die( esc_html__( 'You do not have permission to do this.', 'dynamic-link-hub' ) );
+		}
+		check_admin_referer( 'dlh_import_settings', 'dlh_import_nonce' );
+
+		$redirect_to = admin_url( 'admin.php?page=' . self::PAGE_SLUG ) . '#dlh-panel-import-export';
+
+		if ( empty( $_FILES['dlh_import_file'] ) || UPLOAD_ERR_OK !== $_FILES['dlh_import_file']['error'] ) {
+			wp_safe_redirect( add_query_arg( 'dlh_import', 'upload_error', $redirect_to ) );
+			exit;
+		}
+
+		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_read_file_get_contents -- small JSON settings file from a just-completed same-request upload; WP_Filesystem is unnecessary overhead here.
+		$raw  = file_get_contents( $_FILES['dlh_import_file']['tmp_name'] );
+		$data = json_decode( (string) $raw, true );
+
+		$settings = ( is_array( $data ) && isset( $data['plugin'], $data['settings'] ) && 'dynamic-link-hub' === $data['plugin'] && is_array( $data['settings'] ) )
+			? $data['settings']
+			: null;
+
+		if ( null === $settings ) {
+			wp_safe_redirect( add_query_arg( 'dlh_import', 'invalid_file', $redirect_to ) );
+			exit;
+		}
+
+		update_option( DLH_OPTION_KEY, $this->sanitize( $settings ) );
+
+		wp_safe_redirect( add_query_arg( 'dlh_import', 'success', $redirect_to ) );
+		exit;
 	}
 }

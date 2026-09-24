@@ -2,8 +2,8 @@
 /**
  * Plugin Name:       Dynamic Link Hub
  * Plugin URI:        https://ascendantbits.com/
- * Description:       A configurable link-in-bio hub shortcode, rendered in its own width-configurable container with an optional round avatar image. Always links your most recent post, plus editable custom link buttons and an optional social menu. Use the [dynamic_link_hub] shortcode anywhere.
- * Version:           1.4.0
+ * Description:       A configurable link-in-bio hub, available as a shortcode or a block. Rendered in its own width-configurable container with an optional round avatar image. Always links your most recent post, plus editable custom link buttons and an optional social menu. Use the [dynamic_link_hub] shortcode or the "Link Hub" block anywhere, and import/export your settings from Link Hub → Import / Export.
+ * Version:           1.5.0
  * Requires at least: 5.8
  * Requires PHP:      7.4
  * Author:            Ascendant Bits Creative Digital
@@ -34,7 +34,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // --- Constants ---
-define( 'DLH_VERSION', '1.4.0' );
+define( 'DLH_VERSION', '1.5.0' );
 define( 'DLH_PLUGIN_FILE', __FILE__ );
 define( 'DLH_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'DLH_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
@@ -84,6 +84,7 @@ function dlh_get_settings() {
 require_once DLH_PLUGIN_DIR . 'includes/class-dlh-admin.php';
 require_once DLH_PLUGIN_DIR . 'includes/class-dlh-icons.php';
 require_once DLH_PLUGIN_DIR . 'includes/class-dlh-shortcode.php';
+require_once DLH_PLUGIN_DIR . 'includes/class-dlh-block.php';
 
 /**
  * This plugin isn't distributed through WordPress.org, so WordPress has no
@@ -122,7 +123,8 @@ function dlh_init() {
 	load_plugin_textdomain( 'dynamic-link-hub', false, dirname( plugin_basename( DLH_PLUGIN_FILE ) ) . '/languages' );
 
 	new DLH_Admin();
-	new DLH_Shortcode();
+	DLH_Shortcode::instance();
+	new DLH_Block();
 }
 add_action( 'plugins_loaded', 'dlh_init' );
 

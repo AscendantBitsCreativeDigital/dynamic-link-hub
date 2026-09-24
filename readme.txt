@@ -4,7 +4,7 @@ Tags: link in bio, link hub, shortcode, social icons, buttons
 Requires at least: 5.8
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.4.0
+Stable tag: 1.5.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -36,6 +36,15 @@ render a self-contained, centered hub:
 
 Button color, text color, hover colors, corner radius, and the overall
 container width are all configurable under the **Appearance** tab.
+
+Add it however you like: the `[dynamic_link_hub]` shortcode, or the
+**Link Hub** block in the block editor (search "Link Hub" in the block
+inserter) — both render the exact same hub from the same settings, and
+the block shows a live preview right in the editor.
+
+Need to move your settings to another site, or just want a backup? Use
+**Import / Export** to download everything as a single JSON file, or
+upload one to restore it.
 
 The original shortcode tag (`[dynamic_link_hub_final]`) still works, so
 this is a drop-in replacement if you were using the earlier hand-rolled
@@ -78,12 +87,23 @@ entirely.
 
 = Can I use more than one link hub on a site? =
 
-Yes — place the `[dynamic_link_hub]` shortcode on as many pages or posts
-as you like; each renders the same configured hub.
+Yes — place the `[dynamic_link_hub]` shortcode (or the Link Hub block) on
+as many pages or posts as you like; each renders the same configured hub.
+(Support for running independently configured hubs, each with their own
+settings, is being explored for a future version.)
 
 = Is the social icon row responsive? =
 
 Yes, the icons wrap onto additional rows on narrow screens automatically.
+
+= Can I move my settings to another site? =
+
+Yes — go to **Link Hub → Import / Export** and download a JSON file, then
+upload it on the other site's Import / Export tab. The avatar image and
+any buttons linking to an existing page/post are specific to the site
+they came from and won't carry over (re-add those after importing);
+everything else — colors, custom-URL buttons, social links — comes
+across as-is.
 
 == Screenshots ==
 
@@ -93,6 +113,17 @@ Yes, the icons wrap onto additional rows on narrow screens automatically.
 4. The Social Links tab: adding a platform, handle, or custom link.
 
 == Changelog ==
+
+= 1.5.0 =
+* Added a native "Link Hub" block for the block editor, with a live
+  preview while editing — an alternative to the `[dynamic_link_hub]`
+  shortcode that renders from the exact same settings.
+* Added Import / Export: download all Link Hub settings as a JSON file,
+  or upload one to restore/transfer them, from a new tab on the settings
+  page.
+* The hub's CSS is now printed inline with its markup instead of being
+  queued to the footer, so the block editor's live preview always
+  renders fully styled.
 
 = 1.4.0 =
 * Added self-hosted update checking against this plugin's GitHub
@@ -130,6 +161,11 @@ Yes, the icons wrap onto additional rows on narrow screens automatically.
 * Initial release.
 
 == Upgrade Notice ==
+
+= 1.5.0 =
+Adds a Link Hub block for the block editor and a settings Import/Export
+tab. No action needed — the shortcode and your existing settings work
+exactly as before.
 
 = 1.4.0 =
 Adds automatic update checking via GitHub. After this version, updates
